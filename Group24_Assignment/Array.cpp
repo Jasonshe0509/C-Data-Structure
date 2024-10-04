@@ -1,5 +1,5 @@
 #include "Array.hpp"
-#define MAX_FOUND_WORDS 100
+#define MAX_FOUND_WORDS 1000
 
 string toLowerCase(string str) {
 	transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -7,10 +7,15 @@ string toLowerCase(string str) {
 }
 
 string cleanWord(string word) {
-	// Remove punctuation and spaces from the word
+	// Use std::remove_if to remove non-ASCII characters and punctuation except for '.', '+', '*', "/"
 	word.erase(remove_if(word.begin(), word.end(), [](unsigned char c) {
-		return ispunct(c) || isspace(c);
+		// Remove non-ASCII characters (outside 32 to 126) and unwanted punctuation
+		return (c < 32 || c > 126) || (ispunct(c) && c != '.' && c != '/' && c != '+' && c != '*');
 		}), word.end());
+
+	// Replace all periods ('.') with spaces
+	replace(word.begin(), word.end(), '.', ' ');
+	replace(word.begin(), word.end(), '/', ' ');
 
 	return word;
 }
@@ -58,39 +63,6 @@ int exponentialSearch(WordItem* wordList, int listSize, const string& word) {
 
 	return binarySearch(wordList, i / 2, min(i, listSize - 1), word);
 }
-
-int interpolationSearch(WordItem* wordList, int listSize, const string& word) {
-	int low = 0, high = listSize - 1;
-
-	while (low <= high && word >= wordList[low].words && word <= wordList[high].words) {
-		if (low == high) {
-			if (wordList[low].words == word) return low;
-			return -1;
-		}
-
-		// Calculate position based on the interpolation formula
-		int pos = low + ((high - low) / (wordList[high].words.compare(wordList[low].words) != 0 ?
-			(wordList[high].words.compare(wordList[low].words)) : 1)) *
-			(word.compare(wordList[low].words));
-
-		// Check if the word is found at pos
-		if (wordList[pos].words == word) {
-			return pos;
-		}
-
-		// If the word is larger, it is in the upper part
-		if (wordList[pos].words < word) {
-			low = pos + 1;
-		}
-		// If the word is smaller, it is in the lower part
-		else {
-			high = pos - 1;
-		}
-	}
-
-	return -1; // Word not found
-}
-
 
 double calculateSentimentScore(int positiveCount, int negativeCount) {
 	int rawSentimentScore = positiveCount - negativeCount;
@@ -193,7 +165,12 @@ void quickSort(WordItem arr[], int left, int right) {
 		quickSort(arr, i, right);
 }
 
-int ArrayList::countFileLines(string filename) {
+void logToFileAndConsole(ofstream& outFile, const string& message) {
+	cout << message;
+	outFile << message;
+}
+
+int ArrayList::countFileLines(string filename, string fileType) {
 	ifstream file(filename);
 	if (!file) {
 		cout << "Error opening " << filename << endl;
@@ -207,7 +184,12 @@ int ArrayList::countFileLines(string filename) {
 	}
 
 	file.close();
-	return lines;
+	if (fileType == "txt") {
+		return lines;
+	}
+	else {
+		return lines - 1;
+	}
 }
 
 void ArrayList::setWords(int index, string words) {
@@ -221,7 +203,7 @@ void ArrayList::setFeedbackWords(int index, string reviews, int ratings) {
 }
 
 void ArrayList::readFileData(string fileName, string fileType) {
-	arraySize = countFileLines(fileName);
+	arraySize = countFileLines(fileName, fileType);
 
 	if (arraySize == 0) {
 		cout << "File is empty or could not be read." << endl;
@@ -252,6 +234,7 @@ void ArrayList::readFileData(string fileName, string fileType) {
 	}
 	else if (fileType == "csv") {
 		while (getline(file, line) && i < arraySize) {
+
 			size_t lastComma = line.find_last_of(',');
 			string review, ratingStr;
 
@@ -267,7 +250,7 @@ void ArrayList::readFileData(string fileName, string fileType) {
 				break;
 			}
 
-			int rating = atoi(ratingStr.c_str());
+			int rating = stoi(ratingStr);
 			setFeedbackWords(i, review, rating);
 
 			i++;
@@ -301,6 +284,27 @@ void ArrayList::displayData(string dataType) {
 	}
 
 }
+
+int ArrayList::resizeArrayList() {
+	int newArraySize = arraySize + 1;  // Increase size by 1
+	FeedbackItem* newfeedbackList = new FeedbackItem[newArraySize];
+
+	// Copy old data to the new array
+	for (int i = 0; i < arraySize; i++) {
+		newfeedbackList[i] = feedbackList[i];
+	}
+
+	newfeedbackList[newArraySize - 1].reviews = "";
+	newfeedbackList[newArraySize - 1].ratings = 0;
+
+	// Delete the old array and assign the new one
+	delete[] feedbackList;
+	feedbackList = newfeedbackList;
+	arraySize = newArraySize;  // Update the size
+
+	return arraySize;  // Return the new size
+}
+
 
 void ArrayList::updateWordCount(string word, ArrayList& wordsList, ArrayList& wordsFound, int& index, int& count, string search) {
 	int wordIndex = -1;
@@ -371,29 +375,6 @@ void ArrayList::updateWordCount(string word, ArrayList& wordsList, ArrayList& wo
 			}
 		}
 	}
-	else if (search == "interpolation") {
-		// Code for interpolation search
-		wordIndex = interpolationSearch(wordsList.wordList, wordsList.arraySize, word);
-		if (wordIndex != -1) {
-			count++;
-			wordsList.wordList[wordIndex].count++;
-
-			// Same logic for updating wordsFound
-			bool wordExists = false;
-			for (int i = 0; i < index; i++) {
-				if (wordsFound.wordList[i].words == word) {
-					wordsFound.wordList[i].count++;
-					wordExists = true;
-					break;
-				}
-			}
-			if (!wordExists && index < MAX_FOUND_WORDS) {
-				wordsFound.wordList[index].words = word;
-				wordsFound.wordList[index].count = 1;
-				index++;
-			}
-		}
-	}
 }
 
 void ArrayList::countSentimentWords(string review, int& positiveCount, int& negativeCount, ArrayList& positiveWordsList, ArrayList& negativeWordsList, ArrayList& positiveWordsFound, ArrayList& negativeWordsFound, int& posWordsIndex, int& negWordsIndex, string search) {
@@ -409,13 +390,18 @@ void ArrayList::countSentimentWords(string review, int& positiveCount, int& nega
 		word = cleanWord(word);
 		word = toLowerCase(word);
 
-		updateWordCount(word, positiveWordsList, positiveWordsFound, posWordsIndex, positiveCount, search);
-		updateWordCount(word, negativeWordsList, negativeWordsFound, negWordsIndex, negativeCount, search);
+		stringstream wordStream(word);
+		string splitWord;
 
+		// Process each part of the word after punctuation is replaced
+		while (wordStream >> splitWord) {
+			updateWordCount(splitWord, positiveWordsList, positiveWordsFound, posWordsIndex, positiveCount, search);
+			updateWordCount(splitWord, negativeWordsList, negativeWordsFound, negWordsIndex, negativeCount, search);
+		}
 	}
 }
 
-void ArrayList::getTop10Words(string sort) {
+void ArrayList::getSortedWords(string sort, ofstream& outFile) {
 	// Sort the wordList array by word count in descending order
 	if (sort == "merge") {
 		mergeSort(this->wordList, 0, this->arraySize - 1);
@@ -424,10 +410,11 @@ void ArrayList::getTop10Words(string sort) {
 		quickSort(this->wordList, 0, this->arraySize - 1);
 	}
 
-	// Print the top 10 words
-	int topN = std::min(this->arraySize, 10); // If there are less than 10 words, adjust the limit
-	for (int i = 0; i < topN; i++) {
-		cout << wordList[i].words << " : " << wordList[i].count << endl;
+	for (int i = 0; i < arraySize; i++) {
+		if (wordList[i].count > 0) {
+			string output = "~ " + wordList[i].words + ": " + to_string(wordList[i].count) + " times\n";
+			logToFileAndConsole(outFile, output);
+		}
 	}
 }
 
@@ -463,10 +450,10 @@ void ArrayList::getMostFrequentAndLeastFrequentWords() {
 	arraySize = newSize;
 }
 
-void ArrayList::displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, ArrayList& negativeWordsList) {
+void ArrayList::displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, ArrayList& negativeWordsList, ofstream& outFile) {
 	if (positiveWordsList.wordList == nullptr || negativeWordsList.wordList == nullptr ||
 		positiveWordsList.arraySize == 0 || negativeWordsList.arraySize == 0) {
-		cout << "No words to process!" << endl;
+		logToFileAndConsole(outFile, "No words to process!\n");
 		return;
 	}
 
@@ -497,54 +484,62 @@ void ArrayList::displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, 
 	}
 
 	// Step 2: Display words with the max frequency from both lists
-	cout << "Maximum used word(s) in the reviews: ";
+	stringstream maxWordsStream;
+	maxWordsStream << "Maximum used word(s) in the reviews(" << maxFrequency << " times) :" ;
 	bool maxWordsFound = false;
 
 	for (int i = 0; i < positiveWordsList.arraySize; i++) {
 		if (positiveWordsList.wordList[i].count == maxFrequency) {
-			if (maxWordsFound) cout << ", ";
-			cout << positiveWordsList.wordList[i].words;
+			if (maxWordsFound) maxWordsStream << ", ";
+			maxWordsStream << positiveWordsList.wordList[i].words;
 			maxWordsFound = true;
 		}
 	}
 
 	for (int i = 0; i < negativeWordsList.arraySize; i++) {
 		if (negativeWordsList.wordList[i].count == maxFrequency) {
-			if (maxWordsFound) cout << ", ";
-			cout << negativeWordsList.wordList[i].words;
+			if (maxWordsFound) maxWordsStream << ", ";
+			maxWordsStream << negativeWordsList.wordList[i].words;
 			maxWordsFound = true;
 		}
 	}
 
 	if (!maxWordsFound) {
-		cout << "None";
+		maxWordsStream << "None";
 	}
-	cout << endl;
+	maxWordsStream << endl;
+
+	// Log maximum words to console and file
+	logToFileAndConsole(outFile, maxWordsStream.str());
 
 	// Step 3: Display words with the min frequency (ignoring 0 count) from both lists
-	cout << "Minimum used word(s) in the reviews: ";
+	stringstream minWordsStream;
+	minWordsStream << "Minimum used word(s) in the reviews(" << minFrequency << " times) :" << endl;
 	bool minWordsFound = false;
 
 	for (int i = 0; i < positiveWordsList.arraySize; i++) {
 		if (positiveWordsList.wordList[i].count == minFrequency && positiveWordsList.wordList[i].count > 0) {
-			if (minWordsFound) cout << ", ";
-			cout << positiveWordsList.wordList[i].words;
+			if (minWordsFound) minWordsStream << ", ";
+			minWordsStream << positiveWordsList.wordList[i].words;
 			minWordsFound = true;
 		}
 	}
 
 	for (int i = 0; i < negativeWordsList.arraySize; i++) {
 		if (negativeWordsList.wordList[i].count == minFrequency && negativeWordsList.wordList[i].count > 0) {
-			if (minWordsFound) cout << ", ";
-			cout << negativeWordsList.wordList[i].words;
+			if (minWordsFound) minWordsStream << ", ";
+			minWordsStream << negativeWordsList.wordList[i].words;
 			minWordsFound = true;
 		}
 	}
 
 	if (!minWordsFound) {
-		cout << "None";
+		minWordsStream << "None";
 	}
-	cout << endl;
+	minWordsStream << endl;
+
+	// Log minimum words to console and file
+	logToFileAndConsole(outFile, minWordsStream.str());
 }
 
 void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativeWordsList, string search, string sort) {
@@ -552,6 +547,17 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 		cout << "No reviews to analyze!" << endl;
 		return;
 	}
+	time_t t = time(nullptr);
+	tm tm;
+	localtime_s(&tm, &t);
+
+	ostringstream oss;
+	oss << put_time(&tm, "%Y-%m-%d_%H-%M");
+	string timestamp = oss.str();
+	string filename = "Review_Analysis_Report " + timestamp + ".txt";
+
+	ofstream outFile(filename);
+
 	int totalReviews = 0, totalPositiveWords = 0, totalNegativeWords = 0, totalCorrectReview = 0;
 
 	ArrayList positiveWordsFound("Positive Words Found");
@@ -560,7 +566,7 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 	ArrayList negativeWordsFound("Negative Words Found");
 	negativeWordsFound.wordList = new WordItem[MAX_FOUND_WORDS];
 
-	for (int i = 0; i < arraySize - 1; i++) {
+	for (int i = 0; i < arraySize; i++) {
 		int positiveCount = 0, negativeCount = 0;
 		int posWordsIndex = 0, negWordsIndex = 0;
 
@@ -620,26 +626,57 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 		totalPositiveWords += positiveCount;
 		totalNegativeWords += negativeCount;
 	}
-	cout << "Total Reviews: " << totalReviews << endl;
-	cout << "Total Counts of positive words: " << totalPositiveWords << endl;
-	cout << "Total Counts of negative words: " << totalNegativeWords << endl;
-	cout << endl;
+	logToFileAndConsole(outFile, "Total Reviews: " + to_string(totalReviews) + "\n");
+	logToFileAndConsole(outFile, "Total Counts of positive words: " + to_string(totalPositiveWords) + "\n");
+	logToFileAndConsole(outFile, "Total Counts of negative words: " + to_string(totalNegativeWords) + "\n");
+	logToFileAndConsole(outFile, "\n");
+
 	double totalCorrectPercentage = (double(totalCorrectReview) / totalReviews) * 100;
-	cout << "The accurancy of user rating based on the given feedback will be: " << totalCorrectPercentage << "%" << endl;
-	cout << endl;
-	cout << "Frequency of each word used in overall reviews, listed in ascending order based on frequency: " << endl;
-	cout << "Positive Words: " << endl;
-	positiveWordsList.getTop10Words(sort);
-	cout << endl;
-	cout << "Negative Words: " << endl;
-	negativeWordsList.getTop10Words(sort);
-	cout << endl;
+	logToFileAndConsole(outFile, "The accuracy of user rating based on the given feedback will be: " + to_string(totalCorrectPercentage) + "%\n");
+	logToFileAndConsole(outFile, "\n");
+	logToFileAndConsole(outFile, "Frequency of each word used in overall reviews, listed in ascending order based on frequency: \n");
+	logToFileAndConsole(outFile, "Positive Words: \n");
+	positiveWordsList.getSortedWords(sort,outFile);
+	logToFileAndConsole(outFile, "\n");
+	logToFileAndConsole(outFile, "Negative Words: \n");
+	negativeWordsList.getSortedWords(sort,outFile);
+	logToFileAndConsole(outFile, "\n");
 
 	positiveWordsList.getMostFrequentAndLeastFrequentWords();
 	negativeWordsList.getMostFrequentAndLeastFrequentWords();
-	displayMaxAndMinUsedWordsCombined(positiveWordsList, negativeWordsList);
+	displayMaxAndMinUsedWordsCombined(positiveWordsList, negativeWordsList, outFile);
 
-	cout << endl;
+	logToFileAndConsole(outFile, "\n");
+
+	outFile.close();
+}
+void ArrayList::printCSV() {
+	time_t t = time(nullptr);
+	tm tm;
+	localtime_s(&tm, &t);
+
+	ostringstream oss;
+	oss << put_time(&tm, "%Y-%m-%d_%H-%M");
+	string timestamp = oss.str();
+	string filename = "Sentiment_Analysis_Reviews_" + timestamp + ".csv";
+
+	ofstream outFile(filename);
+
+	if (!outFile) {
+		cout << "Error creating file: " << filename << endl;
+		return;
+	}
+
+	//write headers of csv file
+	outFile << "Review,Analysis Rating" << endl;
+
+	for (int i = 0; i < arraySize - 1; i++) {
+		outFile << feedbackList[i].reviews << ","
+			<< feedbackList[i].ratings << endl;
+	}
+
+	outFile.close();
+	cout << "Reviews have been written to: " << filename << endl;
 }
 
 ArrayList::~ArrayList() {

@@ -131,12 +131,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Array.cpp" />
-    <ClCompile Include="BinarySearch&amp;MergeSortTestArray.cpp" />
-    <ClCompile Include="BinarySearch&amp;QuickSortTestArray.cpp" />
-    <ClCompile Include="ExponentialSearch&amp;MergeSortTestArray.cpp" />
-    <ClCompile Include="ExponentialSearch&amp;QuickSortTestArray.cpp" />
-    <ClCompile Include="InterpolationSearch&amp;MergeSortTestArray.cpp" />
-    <ClCompile Include="LinearSearch&amp;MergeSortTestArray.cpp" />
+    <ClCompile Include="BinarySearch_MergeSortTestArray.cpp" />
+    <ClCompile Include="BinarySearch_QuickSortTestArray.cpp" />
+    <ClCompile Include="ExponentialSearch_MergeSortTestArray.cpp" />
+    <ClCompile Include="ExponentialSearch_QuickSortTestArray.cpp" />
+    <ClCompile Include="LinearSearch_MergeSortTestArray.cpp" />
+    <ClCompile Include="LinearSearch_QuickSortTestArray.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

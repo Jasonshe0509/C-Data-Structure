@@ -33,7 +33,7 @@ public:
 		this->feedbackList = nullptr;
 	}
 
-	int countFileLines(string filename);
+	int countFileLines(string filename, string fileType);
 
 	void setWords(int index, string words);
 
@@ -41,19 +41,23 @@ public:
 
 	void readFileData(string filename, string fileType);
 
+	int resizeArrayList();
+
 	void displayData(string dataType);
 
 	void updateWordCount(string word, ArrayList& wordsList, ArrayList& wordsFound, int& index, int& count, string search);
 
 	void countSentimentWords(string review, int& positiveCount, int& negativeCount, ArrayList& positiveWordsList, ArrayList& negativeWordsList, ArrayList& positiveWordsFound, ArrayList& negativeWordsFound, int& posWordsIndex, int& negWordsIndex, string search);
 
-	void getTop10Words(string sort);
+	void getSortedWords(string sort, ofstream& outFile);
 
 	void getMostFrequentAndLeastFrequentWords();
 
-	void displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, ArrayList& negativeWordsList);
+	void displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, ArrayList& negativeWordsList, ofstream& outFile);
 
 	void analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativeWordsList, string search,string sort);
+
+	void printCSV();
 
 	~ArrayList();
 };
