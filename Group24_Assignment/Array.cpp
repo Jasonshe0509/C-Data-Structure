@@ -20,50 +20,6 @@ string cleanWord(string word) {
 	return word;
 }
 
-bool linearSearch(string word, WordItem* wordList, int listSize, int& wordIndex) {
-	for (int i = 0; i < listSize; i++) {
-		if (wordList[i].words == word) {
-			wordIndex = i;
-			return true;
-		}
-	}
-	wordIndex = -1;
-	return false;
-}
-
-int binarySearch(WordItem* wordList, int left, int right, const string& word) {
-	while (left <= right) {
-		int mid = left + (right - left) / 2;
-		if (wordList[mid].words == word) {
-			return mid;
-		}
-		else if (wordList[mid].words < word) {
-			left = mid + 1;
-		}
-		else {
-			right = mid - 1;
-		}
-	}
-	return -1;
-}
-
-int exponentialSearch(WordItem* wordList, int listSize, const string& word) {
-	if (listSize == 0) {
-		return -1;
-	}
-
-	if (wordList[0].words == word) {
-		return 0;
-	}
-
-	int i = 1;
-	while (i < listSize && wordList[i].words <= word) {
-		i *= 2;
-	}
-
-	return binarySearch(wordList, i / 2, min(i, listSize - 1), word);
-}
-
 double calculateSentimentScore(int positiveCount, int negativeCount) {
 	int rawSentimentScore = positiveCount - negativeCount;
 	int N = positiveCount + negativeCount;
@@ -77,92 +33,6 @@ double calculateSentimentScore(int positiveCount, int negativeCount) {
 	double sentimentScore = 1 + (4 * normalizedScore);
 
 	return sentimentScore;
-}
-
-void merge(WordItem arr[], int left, int mid, int right) {
-	int n1 = mid - left + 1;
-	int n2 = right - mid;
-
-	// Temporary arrays
-	WordItem* L = new WordItem[n1];
-	WordItem* R = new WordItem[n2];
-
-	// Copy data to temporary arrays L[] and R[]
-	for (int i = 0; i < n1; i++)
-		L[i] = arr[left + i];
-	for (int j = 0; j < n2; j++)
-		R[j] = arr[mid + 1 + j];
-
-	int i = 0, j = 0, k = left;
-
-	// Merge the temporary arrays back into arr[left..right]
-	while (i < n1 && j < n2) {
-		if (L[i].count >= R[j].count) { // Sort in descending order of count
-			arr[k] = L[i];
-			i++;
-		}
-		else {
-			arr[k] = R[j];
-			j++;
-		}
-		k++;
-	}
-
-	// Copy the remaining elements of L[], if any
-	while (i < n1) {
-		arr[k] = L[i];
-		i++;
-		k++;
-	}
-
-	// Copy the remaining elements of R[], if any
-	while (j < n2) {
-		arr[k] = R[j];
-		j++;
-		k++;
-	}
-
-	delete[] L;
-	delete[] R;
-}
-
-void mergeSort(WordItem arr[], int left, int right) {
-	if (left < right) {
-		int mid = left + (right - left) / 2;
-
-		// Sort first and second halves
-		mergeSort(arr, left, mid);
-		mergeSort(arr, mid + 1, right);
-
-		// Merge the sorted halves
-		merge(arr, left, mid, right);
-	}
-}
-
-void quickSort(WordItem arr[], int left, int right) {
-	int i = left, j = right;
-	WordItem tmp; // Use WordItem for swapping
-	int pivot = arr[(left + right) / 2].count; // Use the 'count' field for comparison
-
-	while (i <= j) {
-		// Modify comparison to sort in descending order
-		while (arr[i].count > pivot) // Sort descending
-			i++;
-		while (arr[j].count < pivot) // Sort descending
-			j--;
-		if (i <= j) {
-			// Swap the WordItem objects directly
-			tmp = arr[i];
-			arr[i] = arr[j];
-			arr[j] = tmp;
-			i++;
-			j--;
-		}
-	}
-	if (left < j)
-		quickSort(arr, left, j);
-	if (i < right)
-		quickSort(arr, i, right);
 }
 
 void logToFileAndConsole(ofstream& outFile, const string& message) {
@@ -305,12 +175,55 @@ int ArrayList::resizeArrayList() {
 	return arraySize;  // Return the new size
 }
 
+bool ArrayList::linearSearch(const string& word, int& wordIndex) {
+	for (int i = 0; i < arraySize; i++) {
+		if (wordList[i].words == word) {
+			wordIndex = i;
+			return true;
+		}
+	}
+	wordIndex = -1;
+	return false;
+}
+
+int ArrayList::binarySearch(int left, int right, const string& word) {
+	while (left <= right) {
+		int mid = left + (right - left) / 2;
+		if (wordList[mid].words == word) {
+			return mid;
+		}
+		else if (wordList[mid].words < word) {
+			left = mid + 1;
+		}
+		else {
+			right = mid - 1;
+		}
+	}
+	return -1;
+}
+
+int ArrayList::exponentialSearch(const string& word) {
+	if (arraySize == 0) {
+		return -1;
+	}
+
+	if (wordList[0].words == word) {
+		return 0;
+	}
+
+	int i = 1;
+	while (i < arraySize && wordList[i].words <= word) {
+		i *= 2;
+	}
+
+	return binarySearch(i / 2, min(i, arraySize - 1), word); 
+}
 
 void ArrayList::updateWordCount(string word, ArrayList& wordsList, ArrayList& wordsFound, int& index, int& count, string search) {
 	int wordIndex = -1;
 	if (search == "linear") {
 		// Code for linear search (already handled)
-		if (linearSearch(word, wordsList.wordList, wordsList.arraySize, wordIndex)) {
+		if (wordsList.linearSearch(word, wordIndex)) {
 			count++;
 			wordsList.wordList[wordIndex].count++;
 			// Check if the word is found in wordsFound and update accordingly
@@ -331,7 +244,7 @@ void ArrayList::updateWordCount(string word, ArrayList& wordsList, ArrayList& wo
 	}
 	else if (search == "exponential") {
 		// Code for exponential search (already handled)
-		wordIndex = exponentialSearch(wordsList.wordList, wordsList.arraySize, word);
+		wordIndex = wordsList.exponentialSearch(word);
 		if (wordIndex != -1) {
 			count++;
 			wordsList.wordList[wordIndex].count++;
@@ -353,12 +266,11 @@ void ArrayList::updateWordCount(string word, ArrayList& wordsList, ArrayList& wo
 	}
 	else if (search == "binary") {
 		// Call binary search to find the word index
-		wordIndex = binarySearch(wordsList.wordList, 0, wordsList.arraySize - 1, word);
+		wordIndex = wordsList.binarySearch( 0, wordsList.arraySize - 1, word);
 
 		if (wordIndex != -1) {  // If the word is found
 			count++;
 			wordsList.wordList[wordIndex].count++; 
-
 			// Same logic for updating wordsFound
 			bool wordExists = false;
 			for (int i = 0; i < index; i++) {
@@ -401,13 +313,100 @@ void ArrayList::countSentimentWords(string review, int& positiveCount, int& nega
 	}
 }
 
+void ArrayList::merge(int left, int mid, int right) {
+	int n1 = mid - left + 1;
+	int n2 = right - mid;
+
+	// Create temporary arrays for left and right subarrays
+	WordItem* L = new WordItem[n1];
+	WordItem* R = new WordItem[n2];
+
+	// Copy data to temporary arrays
+	for (int i = 0; i < n1; i++)
+		L[i] = wordList[left + i];
+	for (int j = 0; j < n2; j++)
+		R[j] = wordList[mid + 1 + j];
+
+	// Merge the temporary arrays back into wordList
+	int i = 0, j = 0, k = left;
+	while (i < n1 && j < n2) {
+		if (L[i].count >= R[j].count) {
+			wordList[k] = L[i];
+			i++;
+		}
+		else {
+			wordList[k] = R[j];
+			j++;
+		}
+		k++;
+	}
+
+	// Copy the remaining elements of L[], if any
+	while (i < n1) {
+		wordList[k] = L[i];
+		i++;
+		k++;
+	}
+
+	// Copy the remaining elements of R[], if any
+	while (j < n2) {
+		wordList[k] = R[j];
+		j++;
+		k++;
+	}
+
+	// Clean up temporary arrays
+	delete[] L;
+	delete[] R;
+}
+
+void ArrayList::mergeSort(int left, int right) {
+	if (left < right) {
+		int mid = left + (right - left) / 2;
+
+		// Sort first and second halves
+		mergeSort(left, mid);
+		mergeSort(mid + 1, right);
+
+		// Merge the sorted halves
+		merge(left, mid, right);
+	}
+}
+
+void ArrayList::quickSort(int left, int right) {
+	int i = left, j = right;
+	WordItem tmp;  // Use WordItem for swapping
+	int pivot = wordList[(left + right) / 2].count;  // Use the 'count' field for comparison
+
+	while (i <= j) {
+		// Modify comparison to sort in descending order
+		while (wordList[i].count > pivot)  // Sort descending
+			i++;
+		while (wordList[j].count < pivot)  // Sort descending
+			j--;
+		if (i <= j) {
+			// Swap the WordItem objects directly
+			tmp = wordList[i];
+			wordList[i] = wordList[j];
+			wordList[j] = tmp;
+			i++;
+			j--;
+		}
+	}
+
+	if (left < j)
+		quickSort(left, j);
+	if (i < right)
+		quickSort(i, right);
+}
+
 void ArrayList::getSortedWords(string sort, ofstream& outFile) {
 	// Sort the wordList array by word count in descending order
 	if (sort == "merge") {
-		mergeSort(this->wordList, 0, this->arraySize - 1);
+		mergeSort(0, arraySize - 1);
 	}
 	else if (sort == "quick") {
-		quickSort(this->wordList, 0, this->arraySize - 1);
+		quickSort(0, arraySize - 1);
 	}
 
 	for (int i = 0; i < arraySize; i++) {
@@ -650,6 +649,7 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 
 	outFile.close();
 }
+
 void ArrayList::printCSV() {
 	time_t t = time(nullptr);
 	tm tm;
