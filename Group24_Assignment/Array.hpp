@@ -44,10 +44,22 @@ public:
 	int resizeArrayList();
 
 	void displayData(string dataType);
+	
+	bool linearSearch(const string& word, int& wordIndex);
+
+	int binarySearch(int left, int right, const string& word);
+
+	int exponentialSearch(const string& word);
 
 	void updateWordCount(string word, ArrayList& wordsList, ArrayList& wordsFound, int& index, int& count, string search);
 
 	void countSentimentWords(string review, int& positiveCount, int& negativeCount, ArrayList& positiveWordsList, ArrayList& negativeWordsList, ArrayList& positiveWordsFound, ArrayList& negativeWordsFound, int& posWordsIndex, int& negWordsIndex, string search);
+
+	void merge(int left, int mid, int right);
+
+	void mergeSort(int left, int right);
+
+	void quickSort(int left, int right);
 
 	void getSortedWords(string sort, ofstream& outFile);
 
