@@ -44,7 +44,30 @@ int main() {
         } while (repeat == 1);
     }
     auto start = high_resolution_clock::now();
+#if 1
+    //Binary Search and Merge Sort
+    feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "binary", "merge");
+#endif
+#if 0
+    //Binary Search and Quick Sort
     feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "binary", "quick");
+#endif
+#if 0
+    //Exponential Search and Merge Sort
+    feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "exponential", "merge");
+#endif
+#if 0
+    //Exponential Search and Quick Sort
+    feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "exponential", "quick");
+#endif
+#if 0
+    //Linear Search and Merge Sort
+    feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "linear", "merge");
+#endif
+#if 0
+    //Linear Search and Quick Sort
+    feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "linear", "quick");
+#endif
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<seconds>(stop - start);
     cout << "The time execution for the whole program: " << duration.count() << " seconds" << endl;
