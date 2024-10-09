@@ -63,8 +63,6 @@ public:
 
 	void getSortedWords(string sort, ofstream& outFile);
 
-	void getMostFrequentAndLeastFrequentWords();
-
 	void displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, ArrayList& negativeWordsList, ofstream& outFile);
 
 	void analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativeWordsList, string search,string sort);

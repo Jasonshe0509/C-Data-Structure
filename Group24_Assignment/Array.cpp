@@ -417,38 +417,6 @@ void ArrayList::getSortedWords(string sort, ofstream& outFile) {
 	}
 }
 
-void ArrayList::getMostFrequentAndLeastFrequentWords() {
-	if (wordList == nullptr || arraySize == 0) {
-		cout << "No words to process!" << endl;
-		return;
-	}
-
-	int maxFrequency = 0;
-	int minFrequency = INT_MAX;
-
-	for (int i = 0; i < arraySize; i++) {
-		if (wordList[i].count > 0) {
-			if (wordList[i].count > maxFrequency) {
-				maxFrequency = wordList[i].count;
-			}
-			if (wordList[i].count < minFrequency) {
-				minFrequency = wordList[i].count;
-			}
-		}
-	}
-
-	// Step 2: Filter words that have either max or min frequency
-	int newSize = 0;
-	for (int i = 0; i < arraySize; i++) {
-		if (wordList[i].count == maxFrequency || wordList[i].count == minFrequency) {
-			// Keep words with max or min frequency
-			wordList[newSize] = wordList[i];
-			newSize++;
-		}
-	}
-	arraySize = newSize;
-}
-
 void ArrayList::displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, ArrayList& negativeWordsList, ofstream& outFile) {
 	if (positiveWordsList.wordList == nullptr || negativeWordsList.wordList == nullptr ||
 		positiveWordsList.arraySize == 0 || negativeWordsList.arraySize == 0) {
@@ -568,7 +536,6 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 	for (int i = 0; i < arraySize; i++) {
 		int positiveCount = 0, negativeCount = 0;
 		int posWordsIndex = 0, negWordsIndex = 0;
-
 		countSentimentWords(feedbackList[i].reviews, positiveCount, negativeCount, positiveWordsList, negativeWordsList, positiveWordsFound, negativeWordsFound, posWordsIndex, negWordsIndex, search);
 
 		double sentimentScore = calculateSentimentScore(positiveCount, negativeCount);
@@ -641,8 +608,6 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 	negativeWordsList.getSortedWords(sort,outFile);
 	logToFileAndConsole(outFile, "\n");
 
-	positiveWordsList.getMostFrequentAndLeastFrequentWords();
-	negativeWordsList.getMostFrequentAndLeastFrequentWords();
 	displayMaxAndMinUsedWordsCombined(positiveWordsList, negativeWordsList, outFile);
 
 	logToFileAndConsole(outFile, "\n");

@@ -44,11 +44,11 @@ int main() {
         } while (repeat == 1);
     }
     auto start = high_resolution_clock::now();
-#if 1
+#if 0
     //Binary Search and Merge Sort
     feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "binary", "merge");
 #endif
-#if 0
+#if 1
     //Binary Search and Quick Sort
     feedbackList.analyzeFeedback(positiveWordsList, negativeWordsList, "binary", "quick");
 #endif
