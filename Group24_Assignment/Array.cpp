@@ -35,7 +35,7 @@ double calculateSentimentScore(int positiveCount, int negativeCount) {
 	return sentimentScore;
 }
 
-void logToFileAndConsole(ofstream& outFile, const string& message) {
+static void logToFileAndConsole(ofstream& outFile, const string& message) {
 	cout << message;
 	outFile << message;
 }
@@ -216,7 +216,7 @@ int ArrayList::exponentialSearch(const string& word) {
 		i *= 2;
 	}
 
-	return binarySearch(i / 2, min(i, arraySize - 1), word); 
+	return binarySearch(i / 2, min(i, arraySize - 1), word);
 }
 
 void ArrayList::updateWordCount(string word, ArrayList& wordsList, ArrayList& wordsFound, int& index, int& count, string search) {
@@ -266,11 +266,11 @@ void ArrayList::updateWordCount(string word, ArrayList& wordsList, ArrayList& wo
 	}
 	else if (search == "binary") {
 		// Call binary search to find the word index
-		wordIndex = wordsList.binarySearch( 0, wordsList.arraySize - 1, word);
+		wordIndex = wordsList.binarySearch(0, wordsList.arraySize - 1, word);
 
 		if (wordIndex != -1) {  // If the word is found
 			count++;
-			wordsList.wordList[wordIndex].count++; 
+			wordsList.wordList[wordIndex].count++;
 			// Same logic for updating wordsFound
 			bool wordExists = false;
 			for (int i = 0; i < index; i++) {
@@ -330,7 +330,8 @@ void ArrayList::merge(int left, int mid, int right) {
 	// Merge the temporary arrays back into wordList
 	int i = 0, j = 0, k = left;
 	while (i < n1 && j < n2) {
-		if (L[i].count >= R[j].count) {
+		// Compare by count first, and then by word if counts are equal
+		if (L[i].count < R[j].count || (L[i].count == R[j].count && L[i].words < R[j].words)) {
 			wordList[k] = L[i];
 			i++;
 		}
@@ -373,17 +374,28 @@ void ArrayList::mergeSort(int left, int right) {
 	}
 }
 
+
 void ArrayList::quickSort(int left, int right) {
 	int i = left, j = right;
 	WordItem tmp;  // Use WordItem for swapping
-	int pivot = wordList[(left + right) / 2].count;  // Use the 'count' field for comparison
+	int pivotCount = wordList[(left + right) / 2].count;  // Use the 'count' field for comparison
+	std::string pivotWord = wordList[(left + right) / 2].words; // Use the 'word' field for alphabetical comparison
 
 	while (i <= j) {
-		// Modify comparison to sort in descending order
-		while (wordList[i].count > pivot)  // Sort descending
+		// Move i to the right if current count is less than pivotCount
+		// If equal, check if the current word is less than pivotWord for alphabetical sorting
+		while (wordList[i].count < pivotCount ||
+			(wordList[i].count == pivotCount && wordList[i].words < pivotWord)) {
 			i++;
-		while (wordList[j].count < pivot)  // Sort descending
+		}
+
+		// Move j to the left if current count is greater than pivotCount
+		// If equal, check if the current word is greater than pivotWord for alphabetical sorting
+		while (wordList[j].count > pivotCount ||
+			(wordList[j].count == pivotCount && wordList[j].words > pivotWord)) {
 			j--;
+		}
+
 		if (i <= j) {
 			// Swap the WordItem objects directly
 			tmp = wordList[i];
@@ -394,11 +406,13 @@ void ArrayList::quickSort(int left, int right) {
 		}
 	}
 
+	// Recursively sort the left and right partitions
 	if (left < j)
 		quickSort(left, j);
 	if (i < right)
 		quickSort(i, right);
 }
+
 
 void ArrayList::getSortedWords(string sort, ofstream& outFile) {
 	// Sort the wordList array by word count in descending order
@@ -424,89 +438,95 @@ void ArrayList::displayMaxAndMinUsedWordsCombined(ArrayList& positiveWordsList, 
 		return;
 	}
 
-	int maxFrequency = 0;
-	int minFrequency = INT_MAX;
+	int maxPositiveFrequency = 0;
+	int minPositiveFrequency = INT_MAX;
+
+	int maxNegativeFrequency = 0;
+	int minNegativeFrequency = INT_MAX;
 
 	// Step 1: Find the max and min frequency from both positive and negative lists
 	for (int i = 0; i < positiveWordsList.arraySize; i++) {
 		if (positiveWordsList.wordList[i].count > 0) {
-			if (positiveWordsList.wordList[i].count > maxFrequency) {
-				maxFrequency = positiveWordsList.wordList[i].count;
+			if (positiveWordsList.wordList[i].count > maxPositiveFrequency) {
+				maxPositiveFrequency = positiveWordsList.wordList[i].count;
 			}
-			if (positiveWordsList.wordList[i].count < minFrequency) {
-				minFrequency = positiveWordsList.wordList[i].count;
+			if (positiveWordsList.wordList[i].count < minPositiveFrequency) {
+				minPositiveFrequency = positiveWordsList.wordList[i].count;
 			}
 		}
 	}
 
 	for (int i = 0; i < negativeWordsList.arraySize; i++) {
 		if (negativeWordsList.wordList[i].count > 0) {
-			if (negativeWordsList.wordList[i].count > maxFrequency) {
-				maxFrequency = negativeWordsList.wordList[i].count;
+			if (negativeWordsList.wordList[i].count > maxNegativeFrequency) {
+				maxNegativeFrequency = negativeWordsList.wordList[i].count;
 			}
-			if (negativeWordsList.wordList[i].count < minFrequency) {
-				minFrequency = negativeWordsList.wordList[i].count;
+			if (negativeWordsList.wordList[i].count < minNegativeFrequency) {
+				minNegativeFrequency = negativeWordsList.wordList[i].count;
 			}
 		}
 	}
 
-	// Step 2: Display words with the max frequency from both lists
-	stringstream maxWordsStream;
-	maxWordsStream << "Maximum used word(s) in the reviews(" << maxFrequency << " times) :" ;
-	bool maxWordsFound = false;
+	// Step 2: Display max frequency positive words
+	logToFileAndConsole(outFile, "Maximum and Minimum Used Words: \n");
+	logToFileAndConsole(outFile, string(50, '-') + "\n");
+	logToFileAndConsole(outFile, "Maximum used positive word (" + to_string(maxPositiveFrequency) + " times): ");
+	bool maxPosWordFound = false;
 
 	for (int i = 0; i < positiveWordsList.arraySize; i++) {
-		if (positiveWordsList.wordList[i].count == maxFrequency) {
-			if (maxWordsFound) maxWordsStream << ", ";
-			maxWordsStream << positiveWordsList.wordList[i].words;
-			maxWordsFound = true;
+		if (positiveWordsList.wordList[i].count == maxPositiveFrequency) {
+			if (maxPosWordFound) logToFileAndConsole(outFile, ", ");
+			logToFileAndConsole(outFile, positiveWordsList.wordList[i].words);
+			maxPosWordFound = true;
 		}
 	}
+	logToFileAndConsole(outFile, "\n");
 
-	for (int i = 0; i < negativeWordsList.arraySize; i++) {
-		if (negativeWordsList.wordList[i].count == maxFrequency) {
-			if (maxWordsFound) maxWordsStream << ", ";
-			maxWordsStream << negativeWordsList.wordList[i].words;
-			maxWordsFound = true;
-		}
-	}
-
-	if (!maxWordsFound) {
-		maxWordsStream << "None";
-	}
-	maxWordsStream << endl;
-
-	// Log maximum words to console and file
-	logToFileAndConsole(outFile, maxWordsStream.str());
-
-	// Step 3: Display words with the min frequency (ignoring 0 count) from both lists
-	stringstream minWordsStream;
-	minWordsStream << "Minimum used word(s) in the reviews(" << minFrequency << " times) :" << endl;
-	bool minWordsFound = false;
+	// Step 3: Display min frequency positive words
+	logToFileAndConsole(outFile, "Minimum used positive word(s) (" + to_string(minPositiveFrequency) + " times): ");
+	bool minPosWordFound = false;
 
 	for (int i = 0; i < positiveWordsList.arraySize; i++) {
-		if (positiveWordsList.wordList[i].count == minFrequency && positiveWordsList.wordList[i].count > 0) {
-			if (minWordsFound) minWordsStream << ", ";
-			minWordsStream << positiveWordsList.wordList[i].words;
-			minWordsFound = true;
+		if (positiveWordsList.wordList[i].count == minPositiveFrequency && positiveWordsList.wordList[i].count > 0) {
+			if (minPosWordFound) logToFileAndConsole(outFile, ", ");
+			logToFileAndConsole(outFile, positiveWordsList.wordList[i].words);
+			minPosWordFound = true;
 		}
 	}
+	if (!minPosWordFound) {
+		logToFileAndConsole(outFile, "None");
+	}
+	logToFileAndConsole(outFile, "\n");
+	logToFileAndConsole(outFile, string(50, '-') + "\n");
+	// Step 4: Display max frequency negative words
+	logToFileAndConsole(outFile, "Maximum used negative word (" + to_string(maxNegativeFrequency) + " times): ");
+	bool maxNegWordFound = false;
 
 	for (int i = 0; i < negativeWordsList.arraySize; i++) {
-		if (negativeWordsList.wordList[i].count == minFrequency && negativeWordsList.wordList[i].count > 0) {
-			if (minWordsFound) minWordsStream << ", ";
-			minWordsStream << negativeWordsList.wordList[i].words;
-			minWordsFound = true;
+		if (negativeWordsList.wordList[i].count == maxNegativeFrequency) {
+			if (maxNegWordFound) logToFileAndConsole(outFile, ", ");
+			logToFileAndConsole(outFile, negativeWordsList.wordList[i].words);
+			maxNegWordFound = true;
 		}
 	}
+	logToFileAndConsole(outFile, "\n");
 
-	if (!minWordsFound) {
-		minWordsStream << "None";
+	// Step 5: Display min frequency negative words
+	logToFileAndConsole(outFile, "Minimum used negative word(s) (" + to_string(minNegativeFrequency) + " times): ");
+	bool minNegWordFound = false;
+
+	for (int i = 0; i < negativeWordsList.arraySize; i++) {
+		if (negativeWordsList.wordList[i].count == minNegativeFrequency && negativeWordsList.wordList[i].count > 0) {
+			if (minNegWordFound) logToFileAndConsole(outFile, ", ");
+			logToFileAndConsole(outFile, negativeWordsList.wordList[i].words);
+			minNegWordFound = true;
+		}
 	}
-	minWordsStream << endl;
-
-	// Log minimum words to console and file
-	logToFileAndConsole(outFile, minWordsStream.str());
+	if (!minNegWordFound) {
+		logToFileAndConsole(outFile, "None");
+	}
+	logToFileAndConsole(outFile, "\n");
+	logToFileAndConsole(outFile, string(50, '-') + "\n");
 }
 
 void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativeWordsList, string search, string sort) {
@@ -602,10 +622,10 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 	logToFileAndConsole(outFile, "\n");
 	logToFileAndConsole(outFile, "Frequency of each word used in overall reviews, listed in ascending order based on frequency: \n");
 	logToFileAndConsole(outFile, "Positive Words: \n");
-	positiveWordsList.getSortedWords(sort,outFile);
+	positiveWordsList.getSortedWords(sort, outFile);
 	logToFileAndConsole(outFile, "\n");
 	logToFileAndConsole(outFile, "Negative Words: \n");
-	negativeWordsList.getSortedWords(sort,outFile);
+	negativeWordsList.getSortedWords(sort, outFile);
 	logToFileAndConsole(outFile, "\n");
 
 	displayMaxAndMinUsedWordsCombined(positiveWordsList, negativeWordsList, outFile);

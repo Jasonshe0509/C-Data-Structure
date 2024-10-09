@@ -128,10 +128,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Array.hpp" />
+    <ClInclude Include="LinkedList.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Array.cpp" />
     <ClCompile Include="ArrayTestFile.cpp" />
+    <ClCompile Include="LinkedList.cpp" />
+    <ClCompile Include="LinkedListTestFile.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

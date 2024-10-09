@@ -18,12 +18,21 @@
     <ClInclude Include="Array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LinkedList.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Array.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ArrayTestFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LinkedListTestFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LinkedList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
