@@ -52,11 +52,6 @@ struct list { // store review and rating nodes in singly linked list
 	singleListNode* createNewNode(string word, int count);
 	void insert(string word, int count);
 	void display();
-	//merge sort algorithm
-	singleListNode* findSinglyMidPt(singleListNode* head);
-	singleListNode* splitSinglyList(singleListNode* midpoint);
-	singleListNode* singlymerge(singleListNode* leftList, singleListNode* rightList);
-	singleListNode* singlymergeSort(singleListNode* head);
 	void printCSV();
 	~list();
 };

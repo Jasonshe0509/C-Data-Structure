@@ -39,10 +39,10 @@ int main() {
     // Load positive words into the linked list
     if (pfile.is_open()) {
         while (getline(pfile, word)) {
-#if 0
+#if 1
             positiveWords.insertDoublyNodeAtEnd(word, 0); //Insert Method for Linear and Binary Search
 #endif
-#if 1
+#if 0
             positiveWords.insertDoublyNodeAtEnd(word, 0, "hash"); // Additional: Hash insert involved
 #endif
         }
@@ -55,10 +55,10 @@ int main() {
     // Load negative words into the linked list
     if (nfile.is_open()) {
         while (getline(nfile, word)) {
-#if 0
+#if 1
             negativeWords.insertDoublyNodeAtEnd(word, 0); //Insert Method for Linear and Binary Search
 #endif
-#if 1
+#if 0
             negativeWords.insertDoublyNodeAtEnd(word, 0, "hash"); // Additional: Hash insert involved
 #endif
         }
@@ -117,11 +117,11 @@ int main() {
     //Linear Search and Insertion Sort
     analyzer.analyzeReviewDoubly(reviewList, positiveWords, negativeWords, "linear", "insertion");
 #endif
-#if 0
+#if 1
     //Linear Search and Merge Sort
     analyzer.analyzeReviewDoubly(reviewList, positiveWords, negativeWords, "linear", "merge");
 #endif
-#if 1
+#if 0
     //Additional Feature: Hash Search and Insertion Sort (Self-Created Hash Table)
     analyzer.analyzeReviewDoubly(reviewList, positiveWords, negativeWords, "hash", "insertion");
 #endif

@@ -41,97 +41,6 @@ void list::display() {
 	}
 }
 
-//merge sort algorithm implementation
-singleListNode* list::findSinglyMidPt(singleListNode* head) {
-	if (head == nullptr) {
-		return nullptr;
-	}
-	else if (head->next == nullptr) {
-		return head;
-	}
-
-	singleListNode* slow = head;
-	singleListNode* fast = head->next;
-
-	while (fast != nullptr && fast->next != nullptr) {
-		slow = slow->next;
-		fast = fast->next;
-	}
-
-	return slow;
-}
-
-singleListNode* list::splitSinglyList(singleListNode* midpoint) {
-	if (!midpoint || !midpoint->next) {
-		return nullptr;
-	}
-	singleListNode* right_headNode = midpoint->next;
-	midpoint->next = nullptr;
-
-	return right_headNode;
-}
-
-singleListNode* list::singlymerge(singleListNode* left, singleListNode* right) {
-	if (!left) return right;
-	if (!right) return left;
-
-	singleListNode* mergedHead = nullptr;
-	singleListNode* mergedTail = nullptr;
-
-	while (left && right) {
-		if (left->word < right->word) {
-			if (!mergedHead) {
-				mergedHead = left;
-				mergedTail = left;
-			}
-			else {
-				mergedTail->next = left;
-				mergedTail = left;
-			}
-			left = left->next;
-		}
-		else {
-			if (!mergedHead) {
-				mergedHead = right;
-				mergedTail = right;
-			}
-			else {
-				mergedTail->next = right;
-				mergedTail = right;
-			}
-			right = right->next;
-		}
-	}
-
-	// if any left nodes in either left or right list
-	while (left) {
-		mergedTail->next = left;
-		mergedTail = left;
-		left = left->next;
-	}
-
-	while (right) {
-		mergedTail->next = right;
-		mergedTail = right;
-		right = right->next;
-	}
-	return mergedHead;
-}
-
-singleListNode* list::singlymergeSort(singleListNode* head) {
-	if (!head || !head->next) {
-		return head;
-	}
-
-	singleListNode* midPoint = findSinglyMidPt(head);
-	singleListNode* rightListHead = splitSinglyList(midPoint);
-
-	singleListNode* leftsorted = singlymergeSort(head);
-	singleListNode* rightsorted = singlymergeSort(rightListHead);
-
-	return singlymerge(leftsorted, rightsorted);
-}
-
 //Function to convert analysis summary into CSV file 
 void list::printCSV() {
 	if (head == nullptr) {
@@ -730,30 +639,28 @@ void doublyWordList::analyzeReviewDoubly(list& feedbackList, doublyWordList& pos
 				else if (searchType == "hash") {
 					// Direct search for word in positive and negative lists using hash table
 					if (positiveList.hashSearch(currentWordNode)) {
-						positiveCount += currentWordNode->count;
 						tempPositiveWords.insertDoublyNodeAtEnd(wordInReview, currentWordNode->count, "hash");
 					}
 					if (negativeList.hashSearch(currentWordNode)) {
-						negativeCount += currentWordNode->count;
 						tempNegativeWords.insertDoublyNodeAtEnd(wordInReview, currentWordNode->count, "hash");
 					}
 				}
 				else if (searchType == "linear") {
 					// Linear search for word in positive and negative lists
 					if (positiveList.linearsearch(wordInReview, currentWordNode)) {
-						positiveCount += currentWordNode->count;
 						tempPositiveWords.insertDoublyNodeAtEnd(wordInReview, currentWordNode->count, "linear");
 					}
 					if (negativeList.linearsearch(wordInReview, currentWordNode)) {
-						negativeCount += currentWordNode->count;
 						tempNegativeWords.insertDoublyNodeAtEnd(wordInReview, currentWordNode->count, "linear");
 					}
 				}
 			}
 			currentWordNode = currentWordNode->next;
 		}
-		cout << "Positive List: " << positiveCount << endl;
+		cout << "Positive List: " << endl;
 		while (tempPositiveWords.head != nullptr) {
+			//count for every single review
+			positiveCount = positiveCount + tempPositiveWords.head->count;
 			//count for overall 
 			positiveCounter = positiveCounter + tempPositiveWords.head->count;
 			cout << "~ " << tempPositiveWords.head->word << " with frequency of " << tempPositiveWords.head->count << endl;
@@ -764,9 +671,12 @@ void doublyWordList::analyzeReviewDoubly(list& feedbackList, doublyWordList& pos
 			tempPositiveWords.head = tempPositiveWords.head->next;
 			delete tempPositiveWord;
 		}
+		cout << "Total: " << positiveCount << endl << endl;
 
-		cout << "Negative List: " << negativeCount << endl;
+		cout << "Negative List: " << endl;
 		while (tempNegativeWords.head != nullptr) {
+			//count for every single review
+			negativeCount = negativeCount + tempNegativeWords.head->count;
 			//count for overall 
 			negativeCounter = negativeCounter + tempNegativeWords.head->count;
 			cout << "~ " << tempNegativeWords.head->word << " with frequency of " << tempNegativeWords.head->count << endl;
@@ -777,6 +687,8 @@ void doublyWordList::analyzeReviewDoubly(list& feedbackList, doublyWordList& pos
 			tempNegativeWords.head = tempNegativeWords.head->next;
 			delete tempNegativeWord;
 		}
+		cout << "Total: " << negativeCount << endl << endl;
+
 		int sentimentScore = countSentimentScore(positiveCount, negativeCount);
 		totalCorrectReview = compareRatingScore(totalCorrectReview, sentimentScore, reviewTemp->count);
 		reviewCounter++;
