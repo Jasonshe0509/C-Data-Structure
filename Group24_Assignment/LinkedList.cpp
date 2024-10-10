@@ -490,47 +490,51 @@ doubleListNode* doublyWordList::doublymerge(doubleListNode* leftList, doubleList
 	if (!leftList) return rightList;
 	if (!rightList) return leftList;
 
-	// Compare based on the count (frequency) in ascending order
-	if (leftList->count < rightList->count) {
-		leftList->next = doublymerge(leftList->next, rightList);
+	// Create a dummy node to serve as the starting point for the merged list
+	doubleListNode dummy;
+	doubleListNode* tail = &dummy;
 
-		if (leftList->next) {
-			leftList->next->prev = leftList;
+	// Iteratively merge two lists
+	while (leftList && rightList) {
+		if (leftList->count < rightList->count) {
+			tail->next = leftList;
+			leftList->prev = tail;
+			leftList = leftList->next;
 		}
-
-		return leftList;
-	}
-	else if (leftList->count == rightList->count) {
-		// If counts are equal, compare based on the word in alphabetical order
-		if (leftList->word < rightList->word) {
-			leftList->next = doublymerge(leftList->next, rightList);
-
-			if (leftList->next) {
-				leftList->next->prev = leftList;
+		else if (leftList->count == rightList->count) {
+			if (leftList->word < rightList->word) {
+				tail->next = leftList;
+				leftList->prev = tail;
+				leftList = leftList->next;
 			}
-
-			return leftList;
+			else {
+				tail->next = rightList;
+				rightList->prev = tail;
+				rightList = rightList->next;
+			}
 		}
 		else {
-			rightList->next = doublymerge(leftList, rightList->next);
-
-			if (rightList->next) {
-				rightList->next->prev = rightList;
-			}
-
-			return rightList;
+			tail->next = rightList;
+			rightList->prev = tail;
+			rightList = rightList->next;
 		}
+		tail = tail->next;
+	}
+
+	// Attach the remaining part of the lists
+	if (leftList) {
+		tail->next = leftList;
+		leftList->prev = tail;
 	}
 	else {
-		rightList->next = doublymerge(leftList, rightList->next);
-
-		if (rightList->next) {
-			rightList->next->prev = rightList;
-		}
-
-		return rightList;
+		tail->next = rightList;
+		rightList->prev = tail;
 	}
+
+	// Return the merged list, excluding the dummy node
+	return dummy.next;
 }
+
 
 doubleListNode* doublyWordList::doublymergeSort(doubleListNode* head) {
 	if (!head || !head->next) {
