@@ -625,6 +625,7 @@ void doublyWordList::analyzeReviewDoubly(list& feedbackList, doublyWordList& pos
 	doublyWordList tempPositiveWords(300);
 	doublyWordList tempNegativeWords(300);
 
+	double totalExecutionTime = 0.0;
 	while (reviewTemp) {
 		cout << "Review " << reviewPrintCounter << " :" << reviewTemp->word << endl << endl;
 		list wordList;
@@ -633,7 +634,8 @@ void doublyWordList::analyzeReviewDoubly(list& feedbackList, doublyWordList& pos
 		int positiveCount = 0;
 		int negativeCount = 0;
 		singleListNode* currentWordNode = wordList.head;
-		
+
+		auto start = high_resolution_clock::now();
 		while (currentWordNode != nullptr) {
 			string wordInReview = currentWordNode->word;
 			if (positiveList.head != nullptr || negativeList.head != nullptr) {
@@ -661,6 +663,9 @@ void doublyWordList::analyzeReviewDoubly(list& feedbackList, doublyWordList& pos
 			}
 			currentWordNode = currentWordNode->next;
 		}
+		auto stop = high_resolution_clock::now();
+		duration<double> elapsed = stop - start;
+		totalExecutionTime += elapsed.count();
 		cout << "Positive List: " << endl;
 		while (tempPositiveWords.head != nullptr) {
 			//count for every single review
@@ -699,6 +704,7 @@ void doublyWordList::analyzeReviewDoubly(list& feedbackList, doublyWordList& pos
 		reviewPrintCounter++;
 		reviewTemp = reviewTemp->next;
 	}
+	cout << "Total execution time of the searching: " << totalExecutionTime << " seconds" << endl;
 
 	logToFileAndConsole(outFile, "Total Reviews: " + to_string(reviewCounter) + "\n");
 	logToFileAndConsole(outFile, "Total Counts of positive words: " + to_string(positiveCounter) + "\n");

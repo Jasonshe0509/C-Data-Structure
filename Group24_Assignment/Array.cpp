@@ -378,8 +378,8 @@ void ArrayList::mergeSort(int left, int right) {
 void ArrayList::quickSort(int left, int right) {
 	int i = left, j = right;
 	WordItem tmp;  // Use WordItem for swapping
-	int pivotCount = wordList[(left + right) / 2].count;  // Use the 'count' field for comparison
-	std::string pivotWord = wordList[(left + right) / 2].words; // Use the 'word' field for alphabetical comparison
+	int pivotCount = wordList[(left + right) / 2].count;
+	string pivotWord = wordList[(left + right) / 2].words;
 
 	while (i <= j) {
 		// Move i to the right if current count is less than pivotCount
@@ -416,12 +416,16 @@ void ArrayList::quickSort(int left, int right) {
 
 void ArrayList::getSortedWords(string sort, ofstream& outFile) {
 	// Sort the wordList array by word count in descending order
+	auto start = high_resolution_clock::now();
 	if (sort == "merge") {
 		mergeSort(0, arraySize - 1);
 	}
 	else if (sort == "quick") {
 		quickSort(0, arraySize - 1);
 	}
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<microseconds>(stop - start);
+	cout << "Sorting time: " << duration.count() << " microseconds" << endl;
 
 	for (int i = 0; i < arraySize; i++) {
 		if (wordList[i].count > 0) {
@@ -553,10 +557,16 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 	ArrayList negativeWordsFound("Negative Words Found");
 	negativeWordsFound.wordList = new WordItem[MAX_FOUND_WORDS];
 
+	double totalExecutionTime = 0.0;
 	for (int i = 0; i < arraySize; i++) {
 		int positiveCount = 0, negativeCount = 0;
 		int posWordsIndex = 0, negWordsIndex = 0;
+
+		auto start = high_resolution_clock::now();
 		countSentimentWords(feedbackList[i].reviews, positiveCount, negativeCount, positiveWordsList, negativeWordsList, positiveWordsFound, negativeWordsFound, posWordsIndex, negWordsIndex, search);
+		auto stop = high_resolution_clock::now();
+		duration<double> elapsed = stop - start;
+		totalExecutionTime += elapsed.count();
 
 		double sentimentScore = calculateSentimentScore(positiveCount, negativeCount);
 
@@ -612,6 +622,8 @@ void ArrayList::analyzeFeedback(ArrayList& positiveWordsList, ArrayList& negativ
 		totalPositiveWords += positiveCount;
 		totalNegativeWords += negativeCount;
 	}
+	cout << "Total execution time of the searching: " << totalExecutionTime << " seconds" << std::endl;
+
 	logToFileAndConsole(outFile, "Total Reviews: " + to_string(totalReviews) + "\n");
 	logToFileAndConsole(outFile, "Total Counts of positive words: " + to_string(totalPositiveWords) + "\n");
 	logToFileAndConsole(outFile, "Total Counts of negative words: " + to_string(totalNegativeWords) + "\n");
